@@ -40,7 +40,8 @@ def getCamera():
 
 def capturePhoto():
     #TODO: Turn on lights
-    ledMatrix.flashOn()
+    ledMatrix.flashOn(200)
+    sleep(2)
     camera = None
 
     try:
@@ -58,7 +59,7 @@ def capturePhoto():
         if camera:
             camera.close()
 
-    ledMatrix.flashOff()
+    # ledMatrix.flashOff()
     return photo_name
 
 if __name__ == '__main__':

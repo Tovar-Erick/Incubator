@@ -17,6 +17,7 @@ utils_path = this_path+'utils'
 sys.path.insert(0, utils_path)
 import compressImages as ci
 import publishMqtt as myMqtt
+import ledMatrix
 
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
@@ -27,7 +28,7 @@ sensor_names = [ 'temperature'
 camera_name = 'piCamera'
 
 sensors_subfolder = 'Sensors'
-cameras_sulforder = 'Cameras'
+cameras_subforder = 'Cameras'
 
 now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
@@ -38,7 +39,7 @@ def getModules():
     this_path = os.path.dirname(os.path.abspath(__file__))
     sensors_path = os.path.join(this_path, sensors_subfolder)
     sys.path.insert(0, sensors_path)
-    camera_path = os.path.join(this_path, cameras_sulforder)
+    camera_path = os.path.join(this_path, cameras_subforder)
     sys.path.insert(0, camera_path)
     sensor_modules = (__import__(sensor_name) for sensor_name in sensor_names)
     camera_module = __import__(camera_name)
@@ -61,7 +62,7 @@ def getSplitMessage(message):
         else:
             chunks.append(message[ (chunk_number*chunkSize) : ((chunk_number+1)*chunkSize) ])
     return chunks
-"soy un mensajin " + str(now)
+# "soy un mensajin " + str(now)
 def getRBunit():
     return socket.gethostname()
 
@@ -111,11 +112,11 @@ def getCameraData():
 
 if __name__ == '__main__':
     sensor_modules, camera_module = getModules()
-
+    ledMatrix.flashOn(100)
     # Get measurement from each sensor, invokes getMeasurement() from each sensor programm
-    # measurements = (sensor_module.getMeasurement() for sensor_module  in sensor_modules)
+    measurements = (sensor_module.getMeasurement() for sensor_module  in sensor_modules)
 
-    # jsonSensorsData = (getJsonSensorMessage(sensor_name, measurement) for (sensor_name, measurement) in zip(sensor_names, measurements))
+    jsonSensorsData = (getJsonSensorMessage(sensor_name, measurement) for (sensor_name, measurement) in zip(sensor_names, measurements))
 
     cameraData = getCameraData()
     jsonCameraData = getJsonCameraMessage(cameraData)
@@ -124,8 +125,8 @@ if __name__ == '__main__':
     for dataCam in jsonCameraData:
         myMqtt.publishCamera(dataCam)
 
-    # for dataSen in jsonSensorsData:
-        # myMqtt.publishSensor(dataSen)
+    for dataSen in jsonSensorsData:
+        myMqtt.publishSensor(dataSen)
 
     #TODO: Delete image from disk
 
